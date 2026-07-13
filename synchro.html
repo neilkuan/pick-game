@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>せーの！ / synchro / 心有靈犀</title>
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="topbar">
+    <a class="back" href="index.html" lang="ja">← もどる / 回首頁</a>
+    <span class="mark"><span class="a">どっ</span><span class="b">ち</span></span>
+  </header>
+
+  <div class="stage">
+    <div class="stage__head">
+      <h1 class="stage__title">せーの！<span class="en" lang="en">synchro · 心有靈犀</span></h1>
+      <p class="readout">
+        <span lang="ja">お題 <b id="qnum">1</b> / <span id="qtot">5</span></span>
+        <span lang="zh">靈犀 <b id="hitnum">0</b></span>
+      </p>
+    </div>
+
+    <!-- PROMPT -->
+    <p class="prompt" id="prompt">
+      <span class="ja" lang="ja"></span>
+      <span class="en" lang="en"></span>
+      <span class="zh" lang="zh"></span>
+    </p>
+
+    <!-- turn line -->
+    <p class="turn" id="turn" aria-live="polite"></p>
+
+    <!-- 4-option grid (used for both players) -->
+    <div class="grid4" id="grid"></div>
+
+    <!-- secrecy curtain -->
+    <div class="curtain hidden" id="curtain">
+      <p class="big"><span class="p1" lang="ja">プレイヤー1</span> <span lang="ja">えらんだ！</span></p>
+      <p class="sub" lang="zh">畫面已藏起來 · 換玩家2，玩家1請別偷看</p>
+      <button class="btn" id="toP2" lang="ja">プレイヤー2にわたす / 換玩家2 →</button>
+    </div>
+
+    <!-- match reveal -->
+    <div class="blobs hidden" id="blobs" aria-hidden="true">
+      <span class="blob blob--pink"></span>
+      <span class="blob blob--blue"></span>
+      <span class="blobs__label" id="blobLabel">通じた！</span>
+    </div>
+    <p class="prompt hidden" id="revealText"></p>
+
+    <div class="actions hidden" id="nextWrap">
+      <button class="btn" id="nextBtn" lang="ja">つぎのお題 / 下一題 →</button>
+    </div>
+
+    <!-- result -->
+    <div class="result hidden" id="result">
+      <div class="result__score" id="finalScore">0 / 5</div>
+      <div class="result__msg">
+        <span class="ja" id="rJa" lang="ja"></span>
+        <span class="en" id="rEn" lang="en"></span>
+        <span class="zh" id="rZh" lang="zh"></span>
+      </div>
+      <div class="actions">
+        <button class="btn" id="againBtn" lang="ja">もう一回 / 再玩一次</button>
+        <a class="btn btn--ghost" href="index.html" lang="ja">ほかのゲーム / 別的遊戲</a>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+    <footer class="foot"><span lang="ja">同じものを思い浮かべて</span> · <span lang="zh">心裡想著同一個,選下去</span></footer>
+  </div>
+
+</div>
+
+<script>
+/* Rounds — each is "pick the same one". Options come from the pick.md world. */
+const ROUNDS = [
+  { prompt:{ja:"抱きしめたいのは？",en:"which one would you hug?",zh:"最想抱哪一個?"},
+    opts:[
+      {e:"🐹",ja:"ちいかわ",en:"Chiikawa",zh:"吉伊卡哇"},
+      {e:"⭐",ja:"カービィ",en:"Kirby",zh:"星之卡比"},
+      {e:"🌰",ja:"トトロ",en:"Totoro",zh:"龍貓"},
+      {e:"😈",ja:"クロミ",en:"Kuromi",zh:"庫洛米"},
+    ]},
+  { prompt:{ja:"いちばん癒される動物は？",en:"most soothing animal?",zh:"最療癒的動物?"},
+    opts:[
+      {e:"🦫",ja:"カピバラ",en:"capybara",zh:"水豚"},
+      {e:"🦦",ja:"ラッコ",en:"sea otter",zh:"海獺"},
+      {e:"🐧",ja:"ペンギン",en:"penguin",zh:"企鵝"},
+      {e:"🦥",ja:"ナマケモノ",en:"sloth",zh:"樹懶"},
+    ]},
+  { prompt:{ja:"いっしょに食べたい甘いもの",en:"a sweet to share",zh:"想一起吃的甜點"},
+    opts:[
+      {e:"🐟",ja:"たい焼き",en:"taiyaki",zh:"鯛魚燒"},
+      {e:"🥞",ja:"クレープ",en:"crêpe",zh:"可麗餅"},
+      {e:"🍧",ja:"かき氷",en:"shaved ice",zh:"日式刨冰"},
+      {e:"🍵",ja:"抹茶パフェ",en:"matcha parfait",zh:"抹茶芭菲"},
+    ]},
+  { prompt:{ja:"次に行くなら？",en:"where to go next?",zh:"下次去哪裡?"},
+    opts:[
+      {e:"🦌",ja:"奈良",en:"Nara",zh:"奈良"},
+      {e:"🌺",ja:"沖縄",en:"Okinawa",zh:"沖繩"},
+      {e:"⛩️",ja:"京都",en:"Kyoto",zh:"京都"},
+      {e:"🐙",ja:"大阪",en:"Osaka",zh:"大阪"},
+    ]},
+  { prompt:{ja:"連れて帰るグッズは？",en:"which souvenir?",zh:"帶哪個回家?"},
+    opts:[
+      {e:"🧸",ja:"ぬいぐるみ",en:"a plushie",zh:"絨毛娃娃"},
+      {e:"📱",ja:"スマホケース",en:"phone case",zh:"手機殼"},
+      {e:"🎫",ja:"紙もの・ステッカー",en:"stickers & paper",zh:"貼紙紙膠帶"},
+      {e:"🍬",ja:"ご当地スイーツ",en:"local sweets",zh:"當地甜點"},
+    ]},
+];
+
+const $ = id => document.getElementById(id);
+let idx = 0, hits = 0, phase = "p1", picks = { p1:null, p2:null };
+
+/* tiny spring driving one CSS length — animates from the current value,
+   under-damped so the two inks rush in, bump, and settle (apple-design §4) */
+function springLeft(el, from, to, damping, response){
+  if (matchMedia("(prefers-reduced-motion:reduce)").matches){ el.style.left = to + "px"; return; }
+  const w = 2 * Math.PI / response;
+  let x = from, v = 0, last = performance.now();
+  (function frame(now){
+    const dt = Math.min((now - last) / 1000, 1/30); last = now;
+    v += (-w * w * (x - to) - 2 * damping * w * v) * dt;
+    x += v * dt;
+    el.style.left = x.toFixed(2) + "px";
+    if (Math.abs(x - to) < 0.25 && Math.abs(v) < 2){ el.style.left = to + "px"; return; }
+    requestAnimationFrame(frame);
+  })(performance.now());
+}
+
+function render(){
+  const r = ROUNDS[idx];
+  $("qnum").textContent = idx+1;
+  $("qtot").textContent = ROUNDS.length;
+  $("hitnum").textContent = hits;
+  const p = $("prompt");
+  p.querySelector(".ja").textContent = r.prompt.ja;
+  p.querySelector(".en").textContent = r.prompt.en;
+  p.querySelector(".zh").textContent = r.prompt.zh;
+  p.classList.remove("hidden");
+
+  buildGrid(r.opts);
+  picks = { p1:null, p2:null };
+  phase = "p1";
+  setTurn(1);
+  $("grid").classList.remove("hidden");
+  $("curtain").classList.add("hidden");
+  $("blobs").classList.add("hidden");
+  $("blobs").classList.remove("is-match","is-miss");
+  { const pk=$("blobs").querySelector(".blob--pink"), bl=$("blobs").querySelector(".blob--blue");
+    if(pk) pk.style.left=""; if(bl) bl.style.left=""; }
+  $("revealText").classList.add("hidden");
+  $("nextWrap").classList.add("hidden");
+}
+
+function buildGrid(opts){
+  const g = $("grid");
+  g.innerHTML = "";
+  opts.forEach((o,i)=>{
+    const b = document.createElement("button");
+    b.className = "opt";
+    b.setAttribute("aria-pressed","false");
+    b.innerHTML = `<span class="emoji">${o.e}</span>
+      <span class="ja" lang="ja">${o.ja}</span>
+      <span class="en" lang="en">${o.en}</span>
+      <span class="zh" lang="zh">${o.zh}</span>`;
+    b.addEventListener("click", ()=>choose(i));
+    g.appendChild(b);
+  });
+}
+
+function setTurn(p){
+  $("turn").innerHTML = p===1
+    ? '<span class="p1" lang="ja">● プレイヤー1（粉）が選ぶ / 玩家1（粉）偷偷選</span>'
+    : '<span class="p2" lang="ja">● プレイヤー2（青）が選ぶ / 玩家2（藍）偷偷選</span>';
+}
+
+function choose(i){
+  if(phase === "p1"){
+    picks.p1 = i;
+    phase = "curtain";
+    $("grid").classList.add("hidden");
+    $("turn").innerHTML = "";
+    $("curtain").classList.remove("hidden");
+  } else if(phase === "p2"){
+    picks.p2 = i;
+    reveal();
+  }
+}
+
+$("toP2").addEventListener("click", ()=>{
+  phase = "p2";
+  $("curtain").classList.add("hidden");
+  // clear any pressed state so player 2 gets a blank board
+  $("grid").querySelectorAll(".opt").forEach(el=>el.setAttribute("aria-pressed","false"));
+  $("grid").classList.remove("hidden");
+  setTurn(2);
+});
+
+function reveal(){
+  const same = picks.p1 === picks.p2;
+  if(same) hits++;
+  $("hitnum").textContent = hits;
+  $("grid").classList.add("hidden");
+  $("turn").innerHTML = "";
+  $("prompt").classList.add("hidden");
+
+  const blobs = $("blobs");
+  blobs.classList.remove("hidden");
+  const pink = blobs.querySelector(".blob--pink");
+  const blue = blobs.querySelector(".blob--blue");
+  if (same){
+    blobs.classList.add("is-match");
+    // momentum feel: rush to centre, slight overshoot, settle — the inks "find" each other
+    springLeft(pink,   2, 81, 0.6, 0.42);
+    springLeft(blue, 160, 81, 0.6, 0.42);
+  } else {
+    blobs.classList.add("is-miss");
+    springLeft(pink,   2, -34, 1.0, 0.5);   // critically damped: drift apart, no bounce
+    springLeft(blue, 160, 194, 1.0, 0.5);
+  }
+  $("blobLabel").textContent = same ? "通じた！" : "おしい！";
+
+  const opts = ROUNDS[idx].opts;
+  const rt = $("revealText");
+  rt.classList.remove("hidden");
+  rt.innerHTML = same
+    ? `<span class="ja" lang="ja">ふたりとも ${opts[picks.p1].ja}！</span>
+       <span class="en" lang="en">both chose ${opts[picks.p1].en}</span>
+       <span class="zh" lang="zh">兩個人都選了 ${opts[picks.p1].zh} ✿</span>`
+    : `<span class="ja" lang="ja">${opts[picks.p1].ja} と ${opts[picks.p2].ja}</span>
+       <span class="en" lang="en">${opts[picks.p1].en} vs ${opts[picks.p2].en}</span>
+       <span class="zh" lang="zh">一個 ${opts[picks.p1].zh}、一個 ${opts[picks.p2].zh}</span>`;
+
+  $("nextWrap").classList.remove("hidden");
+  $("nextBtn").textContent = idx+1 >= ROUNDS.length ? "けっか / 看結果 →" : "つぎのお題 / 下一題 →";
+}
+
+function next(){
+  if(idx+1 >= ROUNDS.length){ finish(); return; }
+  idx++; render();
+}
+
+function finish(){
+  document.querySelector(".stage__head").classList.add("hidden");
+  $("prompt").classList.add("hidden");
+  $("turn").classList.add("hidden");
+  $("grid").classList.add("hidden");
+  $("blobs").classList.add("hidden");
+  $("revealText").classList.add("hidden");
+  $("nextWrap").classList.add("hidden");
+
+  let msg;
+  if(hits >= 4) msg = {ja:"以心伝心！",en:"reading each other's minds",zh:"根本以心傳心"};
+  else if(hits >= 2) msg = {ja:"けっこう通じてる。",en:"pretty in sync",zh:"蠻有默契的"};
+  else if(hits === 1) msg = {ja:"一回だけ、ばっちり。",en:"one perfect match",zh:"對上了一次!"};
+  else msg = {ja:"次はきっと合う。",en:"next time for sure",zh:"下次一定對得上"};
+
+  $("finalScore").textContent = hits + " / " + ROUNDS.length;
+  $("rJa").textContent = msg.ja; $("rEn").textContent = msg.en; $("rZh").textContent = msg.zh;
+  $("result").classList.remove("hidden");
+}
+
+$("nextBtn").addEventListener("click", next);
+$("againBtn").addEventListener("click", ()=>{
+  idx=0; hits=0;
+  $("result").classList.add("hidden");
+  document.querySelector(".stage__head").classList.remove("hidden");
+  $("turn").classList.remove("hidden");
+  render();
+});
+
+render();
+</script>
+</body>
+</html>

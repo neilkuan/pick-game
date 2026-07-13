@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>迷ったら / can't decide? / 交給命運</title>
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="topbar">
+    <a class="back" href="index.html" lang="ja">← もどる / 回首頁</a>
+    <span class="mark"><span class="a">どっ</span><span class="b">ち</span></span>
+  </header>
+
+  <div class="stage">
+    <div class="stage__head">
+      <h1 class="stage__title">迷ったら<span class="en" lang="en">can't decide? · 交給命運</span></h1>
+    </div>
+
+    <p class="prompt" id="topic">
+      <span class="ja" lang="ja">今日はどっちにする？</span>
+      <span class="en" lang="en">let the ink decide</span>
+      <span class="zh" lang="zh">選不出來？讓墨球幫你決定</span>
+    </p>
+
+    <div class="versus" id="versus">
+      <div class="choice pick-a" id="choiceA" aria-pressed="false">
+        <span class="emoji" id="aEmoji">🍓</span>
+        <span class="ja" lang="ja" id="aJa">苺大福</span>
+        <span class="en" lang="en" id="aEn">strawberry daifuku</span>
+        <span class="zh" lang="zh" id="aZh">草莓大福</span>
+      </div>
+      <span class="versus__or">
+        <span class="ja" lang="ja">or</span>
+        <span class="en" lang="en">どっち</span>
+      </span>
+      <div class="choice pick-b" id="choiceB" aria-pressed="false">
+        <span class="emoji" id="bEmoji">🌸</span>
+        <span class="ja" lang="ja" id="bJa">桜餅</span>
+        <span class="en" lang="en" id="bEn">sakura mochi</span>
+        <span class="zh" lang="zh" id="bZh">櫻餅</span>
+      </div>
+    </div>
+
+    <!-- verdict -->
+    <div class="result hidden" id="verdict">
+      <div class="result__msg">
+        <span class="ja" id="vName" lang="ja"></span>
+      </div>
+      <div class="result__msg" style="margin-top:1rem">
+        <span class="ja" id="vJa" lang="ja"></span>
+        <span class="en" id="vEn" lang="en"></span>
+        <span class="zh" id="vZh" lang="zh"></span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn" id="decideBtn" lang="ja">決めて！ / 幫我決定</button>
+      <button class="btn btn--ghost" id="drawBtn" lang="ja">別のお題 / 換一題</button>
+    </div>
+
+    <div class="spacer"></div>
+    <footer class="foot"><span lang="ja">運にまかせるのも、たのしい</span> · <span lang="zh">偶爾交給運氣，也很好</span></footer>
+  </div>
+
+</div>
+
+<script>
+/* Dilemmas — the hardest "both look good" pairs from the pick.md deck */
+const DILEMMAS = [
+  {a:{e:"🍓",ja:"苺大福",en:"strawberry daifuku",zh:"草莓大福"}, b:{e:"🌸",ja:"桜餅",en:"sakura mochi",zh:"櫻餅"}},
+  {a:{e:"🍮",ja:"焼きプリン",en:"caramel pudding",zh:"焦糖布丁"}, b:{e:"🍈",ja:"メロンソーダ",en:"melon soda float",zh:"哈密瓜蘇打"}},
+  {a:{e:"🐟",ja:"たい焼き",en:"taiyaki",zh:"紅豆鯛魚燒"}, b:{e:"🥞",ja:"フルーツクレープ",en:"fruit crêpe",zh:"水果可麗餅"}},
+  {a:{e:"🍧",ja:"かき氷",en:"shaved ice",zh:"日式刨冰"}, b:{e:"💧",ja:"水信玄餅",en:"water cake",zh:"水信玄餅"}},
+  {a:{e:"🐙",ja:"たこ焼き",en:"takoyaki",zh:"章魚燒"}, b:{e:"🍡",ja:"みたらし団子",en:"mitarashi dango",zh:"醬油糰子"}},
+  {a:{e:"🍵",ja:"抹茶パフェ",en:"matcha parfait",zh:"抹茶芭菲"}, b:{e:"🍥",ja:"ほうじ茶ロール",en:"hojicha roll",zh:"焙茶生乳捲"}},
+  {a:{e:"🐹",ja:"ちいかわ",en:"Chiikawa",zh:"吉伊卡哇"}, b:{e:"⭐",ja:"カービィ",en:"Kirby",zh:"星之卡比"}},
+  {a:{e:"🦌",ja:"奈良で鹿",en:"deer in Nara",zh:"奈良看鹿"}, b:{e:"🌺",ja:"沖縄で海",en:"sea in Okinawa",zh:"沖繩看海"}},
+  {a:{e:"🦫",ja:"カピバラに会う",en:"meet a capybara",zh:"去看水豚"}, b:{e:"🦦",ja:"ラッコに会う",en:"meet a sea otter",zh:"去看海獺"}},
+  {a:{e:"🧸",ja:"大きいぬいぐるみ",en:"a big plushie",zh:"巨大玩偶"}, b:{e:"🔑",ja:"小さいキーホルダー",en:"a little charm",zh:"小吊飾"}},
+];
+
+/* Fortune lines — a little push, gently */
+const FORTUNES = [
+  {ja:"迷った時は、心が軽くなるほう。",en:"pick the one that feels lighter",zh:"猶豫時，選讓你心情變輕的那個"},
+  {ja:"きっとこれが正解。",en:"this one's right, trust it",zh:"這個準沒錯，相信它"},
+  {ja:"今日のあなたに、これ。",en:"today's pick is meant for you",zh:"今天的你，就是它了"},
+  {ja:"えらばなかったほうは、また今度ね。",en:"the other one waits for next time",zh:"另一個，下次再吃就好"},
+  {ja:"直感どおりでよかったでしょ？",en:"your gut already knew",zh:"其實你心裡早有答案了吧"},
+];
+
+const $ = id => document.getElementById(id);
+let cur = null, rolling = false;
+
+function draw(){
+  cur = DILEMMAS[Math.floor(Math.random()*DILEMMAS.length)];
+  $("aEmoji").textContent=cur.a.e; $("aJa").textContent=cur.a.ja; $("aEn").textContent=cur.a.en; $("aZh").textContent=cur.a.zh;
+  $("bEmoji").textContent=cur.b.e; $("bJa").textContent=cur.b.ja; $("bEn").textContent=cur.b.en; $("bZh").textContent=cur.b.zh;
+  $("choiceA").setAttribute("aria-pressed","false");
+  $("choiceB").setAttribute("aria-pressed","false");
+  $("verdict").classList.add("hidden");
+  $("topic").classList.remove("hidden");
+}
+
+function decide(){
+  if(rolling || !cur) return;
+  rolling = true;
+  $("verdict").classList.add("hidden");
+  $("decideBtn").disabled = true;
+  const A = $("choiceA"), B = $("choiceB");
+  A.classList.remove("landed"); B.classList.remove("landed");
+
+  const reduce = window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+  const winner = Math.random() < 0.5 ? "a" : "b";
+
+  if(reduce){ settle(winner); return; }
+
+  // suspense: bounce the highlight back and forth, slowing down
+  let n = 0, on = "a";
+  const total = 9 + Math.floor(Math.random()*4);
+  function tick(){
+    A.setAttribute("aria-pressed", on==="a" ? "true":"false");
+    B.setAttribute("aria-pressed", on==="b" ? "true":"false");
+    on = on==="a" ? "b":"a";
+    n++;
+    if(n < total){
+      setTimeout(tick, 90 + n*22); // decelerate
+    } else {
+      settle(winner);
+    }
+  }
+  tick();
+}
+
+function settle(winner){
+  $("choiceA").setAttribute("aria-pressed", winner==="a" ? "true":"false");
+  $("choiceB").setAttribute("aria-pressed", winner==="b" ? "true":"false");
+  // the chosen side lands with a physical bump (apple-design §8 — hint the outcome)
+  const wEl = winner==="a" ? $("choiceA") : $("choiceB");
+  wEl.classList.remove("landed"); void wEl.offsetWidth; wEl.classList.add("landed");
+  const w = winner==="a" ? cur.a : cur.b;
+  const f = FORTUNES[Math.floor(Math.random()*FORTUNES.length)];
+
+  $("vName").innerHTML = `<span lang="ja">${w.e} ${w.ja}</span> · <span lang="zh">${w.zh}</span>`;
+  $("vJa").textContent = f.ja; $("vEn").textContent = f.en; $("vZh").textContent = f.zh;
+  $("topic").classList.add("hidden");
+  $("verdict").classList.remove("hidden");
+  $("decideBtn").disabled = false;
+  rolling = false;
+}
+
+$("decideBtn").addEventListener("click", decide);
+$("drawBtn").addEventListener("click", draw);
+
+draw();
+</script>
+</body>
+</html>

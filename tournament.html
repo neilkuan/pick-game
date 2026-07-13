@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>勝ち抜き戦 / knockout / 淘汰賽</title>
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="assets/styles.css">
+<style>
+  /* ===== crayon-chibi (pure CSS art, drawn per contestant) ===== */
+  .chibi{ position:relative; display:block; margin:0 auto; }
+  .emoji .chibi{ width:120px; height:120px; }
+  .champ__emoji .chibi{ width:160px; height:160px; }
+  .chibi .cbi{ position:absolute; left:50%; top:-46px; width:320px; height:320px; transform-origin:top center; }
+  .emoji .chibi .cbi{ transform:translateX(-50%) scale(.375); }
+  .champ__emoji .chibi .cbi{ transform:translateX(-50%) scale(.50); }
+
+  .cbi .part{ position:absolute; border:6px solid #33291f; background:transparent; filter:url(#wobble); }
+  .cbi .part::before{ content:""; position:absolute; inset:-2px; border-radius:inherit;
+    background:var(--c,#fff); z-index:-1; transform:translate(2.5px,1.5px); filter:url(#grain); }
+  .cbi .patch{ position:absolute; background:var(--c,#fff); border-radius:50%; filter:url(#wobble); }
+  .cbi .eye{ position:absolute; width:15px; height:16px; border-radius:50%; background:#33291f; filter:url(#wobble); }
+  .cbi .blush{ position:absolute; width:32px; height:18px; border-radius:50%; opacity:.7;
+    background:radial-gradient(closest-side,#f2a2ad 0%,#f2a2ad 55%,transparent 100%); filter:url(#wobble); }
+  .cbi .mouth{ position:absolute; width:16px; height:11px; border-bottom:4px solid #33291f;
+    border-radius:0 0 50% 50%; filter:url(#wobble); }
+  .cbi .mouth-w{ position:absolute; width:22px; height:9px; border-bottom:4px solid #33291f;
+    border-radius:0 0 60% 60%; filter:url(#wobble); }
+  .cbi .xline{ position:absolute; width:5px; height:19px; background:#33291f; border-radius:3px; filter:url(#wobble); }
+  .cbi .line{ position:absolute; background:#33291f; border-radius:4px; filter:url(#wobble); }
+  .choice .src{ display:block; font-size:.72rem; color:var(--ink-soft); margin-top:.15em; }
+  .champ__name .src{ display:block; font-family:var(--mono); font-size:.8rem; color:var(--ink-soft); margin-top:.35em; font-weight:400; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="wobble" x="-20%" y="-20%" width="140%" height="140%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="11" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="6"/>
+  </filter>
+  <filter id="wobble2" x="-20%" y="-20%" width="140%" height="140%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="4" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="7"/>
+  </filter>
+  <filter id="grain" x="-20%" y="-20%" width="140%" height="140%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" seed="3" result="n"/>
+    <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.35 0" result="a"/>
+    <feComposite in="SourceGraphic" in2="a" operator="out"/>
+  </filter>
+</defs></svg>
+<div class="wrap">
+
+  <header class="topbar">
+    <a class="back" href="index.html" lang="ja">← もどる / 回首頁</a>
+    <span class="mark"><span class="a">どっ</span><span class="b">ち</span></span>
+  </header>
+
+  <div class="stage">
+    <div class="stage__head">
+      <h1 class="stage__title">勝ち抜き戦<span class="en" lang="en">knockout · 淘汰賽</span></h1>
+      <p class="readout" id="readout"></p>
+    </div>
+
+    <!-- STEP 1: pick a bracket -->
+    <section id="picker">
+      <p class="prompt">
+        <span class="ja" lang="ja">どの大会にする？</span>
+        <span class="en" lang="en">pick a bracket</span>
+        <span class="zh" lang="zh">選一場比賽,16 個候選兩兩對決</span>
+      </p>
+      <div class="themes" id="themes"></div>
+    </section>
+
+    <!-- STEP 2: the match -->
+    <section id="arena" class="hidden">
+      <p class="turn" id="matchLabel" aria-live="polite"></p>
+      <div class="versus">
+        <button class="choice pick-a" id="cA">
+          <span class="choice__tag" id="tagA"></span>
+          <span class="emoji" id="aE">🍰</span>
+          <span class="ja" lang="ja" id="aJa"></span>
+          <span class="en" lang="en" id="aEn"></span>
+          <span class="zh" lang="zh" id="aZh"></span>
+          <span class="src" id="aSrc"></span>
+        </button>
+        <span class="versus__or"><span class="ja" lang="ja">vs</span><span class="en" lang="en">どっち</span></span>
+        <button class="choice pick-b" id="cB">
+          <span class="choice__tag" id="tagB"></span>
+          <span class="emoji" id="bE">🍫</span>
+          <span class="ja" lang="ja" id="bJa"></span>
+          <span class="en" lang="en" id="bEn"></span>
+          <span class="zh" lang="zh" id="bZh"></span>
+          <span class="src" id="bSrc"></span>
+        </button>
+      </div>
+      <p class="center" style="margin-top:22px;font-family:var(--mono);font-size:.8rem;color:var(--ink-soft)">
+        <span lang="ja">好きなほうをタップ → 勝ち抜き</span> · <span lang="zh">點喜歡的那個,它就晉級</span>
+      </p>
+    </section>
+
+    <!-- STEP 3: champion -->
+    <section id="champ" class="result hidden">
+      <div class="champ">
+        <div class="champ__crown" lang="en">champion · 優勝 · 冠軍</div>
+        <div class="champ__emoji" id="chE">👑</div>
+        <div class="champ__name">
+          <span lang="ja" id="chJa"></span>
+          <span class="zh" lang="zh" id="chZh"></span>
+          <span class="src" id="chSrc"></span>
+        </div>
+        <div class="champ__line">
+          <span class="ja" lang="ja" id="chLineJa"></span>
+          <span class="zh" lang="zh" id="chLineZh"></span>
+        </div>
+        <div class="champ__ask">
+          <span class="ja" lang="ja">それとも、ここにない子がいちばん？</span>
+          <span class="en" lang="en">or is your real favorite not on the list?</span>
+          <span class="zh" lang="zh">還是你有更喜歡的，不在上面?</span>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="againBtn" lang="ja">別の大会 / 換一場</button>
+        <a class="btn btn--ghost" href="index.html" lang="ja">ほかのゲーム / 別的遊戲</a>
+      </div>
+    </section>
+
+    <div class="spacer"></div>
+    <footer class="foot">
+      <span lang="ja">最後の1つまで、選び抜こう</span> · <span lang="zh">一路選到最後一個為止</span>
+    </footer>
+  </div>
+
+</div>
+
+<script>
+/* Brackets — 8 contestants each, all from the pick.md deck */
+const BRACKETS = {
+  sweets: {
+    ja:"スイーツ大会", en:"sweets", zh:"甜點大賽", icon:"🍰",
+    line:{ja:"今日のいちばん、これ！",zh:"今天的第一名就是它!"},
+    list:[
+      {k:"strawberry-cake",e:"🍰",ja:"苺のショートケーキ",en:"strawberry cake",zh:"草莓鮮奶油蛋糕"},
+      {k:"chocolate-tart",e:"🍫",ja:"生チョコタルト",en:"chocolate tart",zh:"生巧克力塔"},
+      {k:"souffle-pancake",e:"🥞",ja:"スフレパンケーキ",en:"soufflé pancake",zh:"舒芙蕾鬆餅"},
+      {k:"taiyaki",e:"🐟",ja:"たい焼き",en:"taiyaki",zh:"紅豆鯛魚燒"},
+      {k:"crepe",e:"🌯",ja:"フルーツクレープ",en:"fruit crêpe",zh:"水果可麗餅"},
+      {k:"takoyaki",e:"🐙",ja:"たこ焼き",en:"takoyaki",zh:"大阪章魚燒"},
+      {k:"dango",e:"🍡",ja:"みたらし団子",en:"mitarashi dango",zh:"京都醬油糰子"},
+      {k:"pudding",e:"🍮",ja:"焼きプリン",en:"caramel pudding",zh:"焦糖布丁"},
+      {k:"melon-soda",e:"🍈",ja:"メロンソーダ",en:"melon soda float",zh:"哈密瓜蘇打"},
+      {k:"matcha-parfait",e:"🍵",ja:"抹茶パフェ",en:"matcha parfait",zh:"宇治抹茶芭菲"},
+      {k:"kakigori",e:"🍧",ja:"かき氷",en:"shaved ice",zh:"日式刨冰"},
+      {k:"mizu-shingen",e:"💧",ja:"水信玄餅",en:"water cake",zh:"水信玄餅"},
+      {k:"daifuku",e:"🍓",ja:"苺大福",en:"strawberry daifuku",zh:"草莓大福"},
+      {k:"sakura-mochi",e:"🌸",ja:"桜餅",en:"sakura mochi",zh:"櫻餅"},
+      {k:"muscat-parfait",e:"🍇",ja:"マスカットパフェ",en:"muscat parfait",zh:"麝香葡萄聖代"},
+      {k:"croissant",e:"🥐",ja:"クロワッサン",en:"butter croissant",zh:"奶油可頌"},
+    ]},
+  chara: {
+    ja:"キャラ大会", en:"characters", zh:"角色大賽", icon:"🐹",
+    line:{ja:"いちばん連れて帰りたい！",zh:"最想帶回家的就是它!"},
+    list:[
+      {k:"chiikawa",e:"🐹",ja:"ちいかわ",en:"Chiikawa",zh:"吉伊卡哇"},
+      {k:"kirby",e:"⭐",ja:"カービィ",en:"Kirby",zh:"星之卡比"},
+      {k:"cinnamoroll",e:"🐶",ja:"シナモロール",en:"Cinnamoroll",zh:"大耳狗"},
+      {k:"kuromi",e:"😈",ja:"クロミ",en:"Kuromi",zh:"庫洛米"},
+      {k:"pikachu",e:"⚡",ja:"ピカチュウ",en:"Pikachu",zh:"皮卡丘"},
+      {k:"doraemon",e:"🔔",ja:"ドラえもん",en:"Doraemon",zh:"哆啦A夢"},
+      {k:"totoro",e:"🌰",ja:"トトロ",en:"Totoro",zh:"龍貓"},
+      {k:"jiji",e:"🐈‍⬛",ja:"ジジ",en:"Jiji",zh:"黑貓吉吉"},
+      {k:"duffy",e:"🧸",ja:"ダッフィー",en:"Duffy",zh:"達菲熊"},
+      {k:"minion",e:"🍌",ja:"ミニオン",en:"Minion",zh:"小小兵"},
+      {k:"labubu",e:"🧌",ja:"ラブブ",en:"Labubu",zh:"拉布布"},
+      {k:"kumamon",e:"🐻",ja:"くまモン",en:"Kumamon",zh:"熊本熊"},
+      {k:"miffy",e:"🐰",ja:"ミッフィー",en:"Miffy",zh:"米菲兔"},
+      {k:"moomin",e:"🦛",ja:"ムーミン",en:"Moomin",zh:"嚕嚕米"},
+      {k:"pompompurin",e:"🍮",ja:"ポムポムプリン",en:"Pompompurin",zh:"布丁狗"},
+      {k:"sumikko",e:"🐧",ja:"すみっコぐらし",en:"Sumikko Gurashi",zh:"角落生物"},
+    ]},
+  animal: {
+    ja:"どうぶつ大会", en:"animals", zh:"動物大賽", icon:"🦫",
+    line:{ja:"いちばん癒される子。",zh:"最療癒的就是它!"},
+    list:[
+      {k:"cat",e:"🐱",ja:"猫",en:"cat",zh:"貓咪"},
+      {k:"shiba",e:"🐕",ja:"柴犬",en:"shiba",zh:"柴犬"},
+      {k:"whale-shark",e:"🦈",ja:"ジンベエザメ",en:"whale shark",zh:"鯨鯊"},
+      {k:"seal",e:"🦭",ja:"アザラシ",en:"seal",zh:"海豹"},
+      {k:"chipmunk",e:"🐿️",ja:"シマリス",en:"chipmunk",zh:"花栗鼠"},
+      {k:"rabbit",e:"🐇",ja:"たれ耳うさぎ",en:"lop rabbit",zh:"垂耳兔"},
+      {k:"sloth",e:"🦥",ja:"ナマケモノ",en:"sloth",zh:"樹懶"},
+      {k:"capybara",e:"🦫",ja:"カピバラ",en:"capybara",zh:"水豚"},
+      {k:"deer",e:"🦌",ja:"奈良の鹿",en:"Nara deer",zh:"奈良小鹿"},
+      {k:"sea-turtle",e:"🐢",ja:"ウミガメ",en:"sea turtle",zh:"海龜"},
+      {k:"panda",e:"🐼",ja:"パンダ",en:"panda",zh:"大貓熊"},
+      {k:"sea-otter",e:"🦦",ja:"ラッコ",en:"sea otter",zh:"海獺"},
+      {k:"penguin",e:"🐧",ja:"ペンギン",en:"penguin",zh:"企鵝"},
+      {k:"corgi",e:"🐶",ja:"コーギー",en:"corgi",zh:"柯基"},
+      {k:"alpaca",e:"🦙",ja:"アルパカ",en:"alpaca",zh:"羊駝"},
+      {k:"fox",e:"🦊",ja:"キツネ",en:"fox",zh:"赤狐"},
+    ]},
+};
+
+const $ = id => document.getElementById(id);
+let bracket=null, round=[], nextRound=[], mi=0;
+
+/* round name by how many are still in */
+function roundName(n){
+  if(n>=16) return {ja:"1回戦",en:"round of 16",zh:"十六強戰"};
+  if(n>=8)  return {ja:"準々決勝",en:"quarterfinal",zh:"八強戰"};
+  if(n>=4)  return {ja:"準決勝",en:"semifinal",zh:"四強戰"};
+  return {ja:"決勝",en:"final",zh:"總決賽"};
+}
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+/* ===== crayon-chibi generators — pure CSS art, no image files ===== */
+function P(l,t,w,h,br,c,f,tr){ return `<div class="part" style="left:${l}px;top:${t}px;width:${w}px;height:${h}px;border-radius:${br};--c:${c||'#fff'}${f?';filter:url(#'+f+')':''}${tr?';transform:'+tr:''}"></div>`; }
+function PA(l,t,w,h,c,tr){ return `<div class="patch" style="left:${l}px;top:${t}px;width:${w}px;height:${h}px;--c:${c||'#fff'}${tr?';transform:'+tr:''}"></div>`; }
+function EY(l,t,c){ return `<div class="eye" style="left:${l}px;top:${t}px${c?';background:'+c:''}"></div>`; }
+function BL(l,t){ return `<div class="blush" style="left:${l}px;top:${t}px"></div>`; }
+function MO(m,cx,t){
+  if(m==='x') return `<div class="xline" style="left:${cx-2}px;top:${t-4}px;transform:rotate(42deg)"></div><div class="xline" style="left:${cx-2}px;top:${t-4}px;transform:rotate(-42deg)"></div>`;
+  if(m==='w') return `<div class="mouth-w" style="left:${cx-11}px;top:${t}px"></div>`;
+  if(m==='open') return `<div class="patch" style="left:${cx-8}px;top:${t}px;width:16px;height:13px;--c:#8a4b4b"></div>`;
+  return `<div class="mouth" style="left:${cx-8}px;top:${t}px"></div>`;
+}
+
+function chibiCreature(a){
+  const c=a.c||'#fff', ec=a.earC||c, cx=160;
+  let h='';
+  h+=P(80,214,160,142,'48% 52% 0 0/66% 70% 0 0',a.bodyC||c);          // body
+  // ears drawn behind head for long/drop, on head for round/pointed → draw after head
+  h+=P(56,64,208,172,'48% 52% 46% 54%/58% 56% 44% 42%',c);            // head
+  if(a.ear==='round'){
+    h+=P(76,30,58,60,'50% 50% 44% 56%/56% 54% 46% 44%',ec);
+    h+=P(186,30,58,60,'50% 50% 56% 44%/54% 56% 44% 46%',ec,'wobble2');
+    h+=PA(84,62,46,28,ec,'rotate(14deg)'); h+=PA(190,62,46,28,ec,'rotate(-14deg)');
+    if(a.innerEar){ h+=PA(88,40,30,30,a.innerEar); h+=PA(200,40,30,30,a.innerEar); }
+  } else if(a.ear==='pointed'){
+    h+=P(82,14,54,70,'72% 28% 50% 50%/82% 30% 40% 40%',ec,null,'rotate(-16deg)');
+    h+=P(184,14,54,70,'28% 72% 50% 50%/30% 82% 40% 40%',ec,'wobble2','rotate(16deg)');
+    if(a.earTip){ h+=PA(88,8,42,32,a.earTip,'rotate(-16deg)'); h+=PA(190,8,42,32,a.earTip,'rotate(16deg)'); }
+    if(a.innerEar){ h+=PA(96,36,24,32,a.innerEar,'rotate(-16deg)'); h+=PA(200,36,24,32,a.innerEar,'rotate(16deg)'); }
+    h+=PA(98,60,42,26,ec); h+=PA(180,60,42,26,ec);
+  } else if(a.ear==='long'){
+    h+=P(112,4,28,104,'50% 50% 46% 46%/34% 34% 66% 66%',ec,null,'rotate(-6deg)');
+    h+=P(180,4,28,104,'50% 50% 46% 46%/34% 34% 66% 66%',ec,'wobble2','rotate(6deg)');
+    if(a.innerEar){ h+=PA(117,16,16,64,a.innerEar,'rotate(-6deg)'); h+=PA(187,16,16,64,a.innerEar,'rotate(6deg)'); }
+    h+=PA(112,80,34,24,ec); h+=PA(174,80,34,24,ec);
+  } else if(a.ear==='drop'){
+    h+=P(50,92,44,90,'46% 54% 46% 54%/38% 38% 62% 62%',ec,null,'rotate(15deg)');
+    h+=P(226,92,44,90,'54% 46% 54% 46%/38% 38% 62% 62%',ec,'wobble2','rotate(-15deg)');
+    h+=PA(80,94,36,30,ec); h+=PA(204,94,36,30,ec);
+  }
+  h+=P(60,238,62,36,'50%',c,null,'rotate(45deg)');                    // arms
+  h+=P(198,238,62,36,'50%',c,'wobble2','rotate(-45deg)');
+  if(a.muzzle) h+=PA(94,150,132,94,a.muzzle);
+  if(a.brow){ h+=PA(104,122,28,18,a.brow); h+=PA(188,122,28,18,a.brow); }
+  if(a.eyePatch){ h+=PA(92,140,44,50,a.eyePatch); h+=PA(184,140,44,50,a.eyePatch); }
+  const sp=a.eyeSpread||92, eT=a.eyeT||156, el=cx-sp/2-7, er=cx+sp/2-7;
+  h+=EY(el,eT,a.eyeC); h+=EY(er,eT,a.eyeC);
+  if(a.beak){ h+=PA(150,172,20,16,a.beak); }
+  else if(a.nose){ h+=PA(150,172,20,14,'#33291f'); }
+  if(a.cheek && a.cheek!=='blush' && a.cheek!==false){ h+=PA(84,180,30,24,a.cheek); h+=PA(206,180,30,24,a.cheek); }
+  else if(a.cheek!==false){ h+=BL(76,182); h+=BL(212,182); }
+  h+=MO(a.mouth, cx, a.muzzle?190:176);
+  return h;
+}
+
+function chibiFood(a){
+  const cx=160; let h=''; const t=a.type;
+  const face=(cy,sp)=>{ let f=EY(cx-(sp||40)/2-7,cy)+EY(cx+(sp||40)/2-7,cy)+BL(cx-(sp||40)/2-24,cy+8)+BL(cx+(sp||40)/2+4,cy+8)+MO('smile',cx,cy+14); return f; };
+  if(t==='cake'){
+    h+=P(92,176,136,92,'14px 14px 22px 22px','#fff3da');
+    h+=P(88,156,144,36,'34px 34px 16px 16px','#fff');
+    h+=P(146,120,34,42,'50% 50% 50% 50%/40% 40% 66% 66%','#ff5b7a');
+    h+=PA(150,112,26,14,'#8ccf6b'); h+=face(214,42);
+  } else if(t==='tart'){
+    h+=P(84,164,152,84,'46% 46% 44% 44%/60% 60% 42% 42%','#c98a52');
+    h+=P(96,150,128,40,'50%','#6b4a2f'); h+=face(206,42);
+  } else if(t==='pancake'){
+    h+=P(96,206,128,40,'50%','#f3c169'); h+=P(90,176,140,40,'50%','#f6cf82');
+    h+=P(98,148,124,40,'50%','#f3c169'); h+=PA(120,140,80,26,'#fff');
+    h+=face(196,40);
+  } else if(t==='fish'){
+    h+=P(70,120,132,90,'58% 44% 44% 58%/64% 60% 40% 36%','#e3ac63',null,'rotate(-4deg)');
+    h+=P(56,140,46,52,'70% 20% 20% 70%/60% 40% 60% 40%','#e3ac63','wobble2');
+    h+=PA(120,150,60,14,'#d89a4e'); h+=EY(178,150); h+=BL(196,168); h+=MO('smile',180,168);
+  } else if(t==='crepe'){
+    h+=P(112,116,96,150,'50% 50% 46% 46%/16% 16% 90% 90%','#f7e2c0');
+    h+=PA(126,128,68,40,'#fff'); h+=PA(140,132,16,16,'#ff5b7a'); h+=PA(166,136,16,16,'#8ccf6b');
+    h+=face(196,38);
+  } else if(t==='takoyaki'){
+    h+=P(102,158,116,110,'50%','#b06a35');
+    h+=`<div class="line" style="left:120px;top:150px;width:80px;height:5px;transform:rotate(-6deg)"></div>`;
+    h+=PA(150,150,20,12,'#6ba84f'); h+=face(206,42);
+  } else if(t==='dango'){
+    h+=`<div class="line" style="left:158px;top:96px;width:5px;height:150px"></div>`;
+    h+=P(140,196,40,40,'50%','#ffcbdb'); h+=P(140,166,40,40,'50%','#fff6ec'); h+=P(140,136,40,40,'50%','#bfe39a');
+    h+=EY(150,150)+EY(170,150)+BL(132,158)+BL(178,158)+MO('smile',160,158);
+  } else if(t==='pudding'){
+    h+=P(94,148,132,20,'44% 44% 40% 40%/80% 80% 30% 30%','#b76b34');
+    h+=P(96,160,128,96,'44% 44% 30% 30% / 60% 60% 30% 30%','#ffdd8f');
+    h+=PA(80,244,160,16,'#fff'); h+=face(210,42);
+  } else if(t==='drink'){
+    h+=P(108,150,104,116,'12px 12px 22px 22px',a.c||'#6fcf7a');
+    h+=`<div class="line" style="left:186px;top:120px;width:8px;height:70px;transform:rotate(10deg)"></div>`;
+    h+=PA(150,120,18,18,'#ff5b7a'); h+=face(210,40);
+  } else if(t==='parfait'){
+    h+=P(120,168,80,98,'10px 10px 18px 18px','#eef6e6');
+    h+=P(104,140,112,52,'50% 50% 40% 40%',a.c||'#9ccb5a');
+    h+=`<div class="line" style="left:196px;top:120px;width:12px;height:40px;background:#e3b778;transform:rotate(12deg)"></div>`;
+    h+=face(212,40);
+  } else if(t==='ice'){
+    h+=P(96,208,128,44,'12px 12px 48% 48%','#cdebff');
+    h+=P(104,138,112,84,'50% 50% 30% 30%/78% 78% 30% 30%','#eaf7ff');
+    h+=PA(120,150,74,30,a.syrup||'#ffd0e0'); h+=PA(150,120,18,18,'#ff5b7a');
+    h+=face(198,40);
+  } else if(t==='waterdrop'){
+    h+=P(112,150,96,110,'50% 50% 46% 46%/70% 70% 40% 40%','#e6eef2');
+    h+=PA(96,236,132,16,'#efe2c9'); h+=PA(196,224,34,22,'#d8b47a');
+    h+=face(200,38);
+  } else if(t==='mochi'){
+    h+=P(100,160,120,100,'50%',a.c||'#fff'); h+=PA(150,150,26,20,'#ffb9cb'); h+=face(206,42);
+  } else if(t==='sakura'){
+    h+=P(102,164,116,96,'48% 52% 46% 54%/56% 56% 44% 44%','#f6bcc4');
+    h+=PA(176,150,44,30,'#8cc878','rotate(20deg)'); h+=face(208,42);
+  } else if(t==='croissant'){
+    h+=P(96,158,128,72,'50% 50% 46% 46%/70% 70% 44% 44%','#e3b06a');
+    h+=P(72,176,52,54,'60% 20% 40% 50%','#e3b06a','wobble2','rotate(30deg)');
+    h+=P(196,176,52,54,'20% 60% 50% 40%','#e3b06a',null,'rotate(-30deg)');
+    h+=face(202,40);
+  } else { h+=P(96,150,128,110,'46%','#f6dfa4'); h+=face(198,42); }
+  return h;
+}
+
+/* per-contestant art params (keyed by slug). creature unless type given (food). */
+const ART={
+  // characters
+  chiikawa:{c:'#fff',ear:'round'},
+  kirby:{c:'#f4a9c0',ear:'none',cheek:'#e86f9a',eyeSpread:70,mouth:'smile'},
+  cinnamoroll:{c:'#fff',ear:'long',eyeSpread:80},
+  kuromi:{c:'#efeaf2',ear:'round',earC:'#413843',innerEar:'#f4a9c0'},
+  pikachu:{c:'#f5c945',ear:'pointed',earTip:'#37322e',cheek:'#dd4a38'},
+  doraemon:{c:'#3fa9dc',ear:'none',muzzle:'#fff',nose:false,beak:'#dd4a38',eyeSpread:44},
+  totoro:{c:'#9b9b90',ear:'pointed',earC:'#9b9b90',muzzle:'#efeae0',eyeSpread:70},
+  jiji:{c:'#2f2b2e',ear:'pointed',earC:'#2f2b2e',eyeC:'#fff',cheek:false},
+  duffy:{c:'#8a5a34',ear:'round',earC:'#8a5a34',muzzle:'#caa06e',nose:true},
+  minion:{c:'#f5c945',ear:'none',muzzle:'#cfd6da',eyeSpread:40,nose:false},
+  labubu:{c:'#9a7a55',ear:'pointed',earC:'#9a7a55',muzzle:'#efe6d6',mouth:'w',eyeSpread:84},
+  kumamon:{c:'#2b2b2b',ear:'round',earC:'#2b2b2b',cheek:'#dd4a38',eyeC:'#fff'},
+  miffy:{c:'#fff',ear:'long',mouth:'x',cheek:false,eyeSpread:96},
+  moomin:{c:'#fff',ear:'none',muzzle:'#fff',eyeSpread:44},
+  pompompurin:{c:'#f5d15a',ear:'drop',earC:'#8a5a2a'},
+  sumikko:{c:'#e9e3d6',ear:'round',earC:'#e9e3d6'},
+  // animals
+  cat:{c:'#c99a63',ear:'pointed',innerEar:'#f2a2ad',nose:true},
+  shiba:{c:'#e8a352',ear:'pointed',muzzle:'#fff',brow:'#fff',nose:true},
+  'whale-shark':{c:'#5b86a8',ear:'none',muzzle:'#e7eef2',eyeC:'#fff',eyeSpread:96},
+  seal:{c:'#b9b7ae',ear:'none',nose:true,eyeSpread:80},
+  chipmunk:{c:'#c98a5a',ear:'round',muzzle:'#fff',nose:true},
+  rabbit:{c:'#e8d8c0',ear:'long',innerEar:'#f6bcc4'},
+  sloth:{c:'#a99a86',ear:'none',muzzle:'#d3c6b2',eyePatch:'#7a6a55'},
+  capybara:{c:'#a9855f',ear:'round',earC:'#a9855f',mouth:'smile'},
+  deer:{c:'#c9975c',ear:'long',earC:'#c9975c',innerEar:'#efe0cc',nose:true},
+  'sea-turtle':{c:'#7bbf7a',ear:'none',muzzle:'#d8ecc0',eyeSpread:80},
+  panda:{c:'#fff',ear:'round',earC:'#2b2b2b',eyePatch:'#2b2b2b',eyeC:'#fff'},
+  'sea-otter':{c:'#8a6a4a',ear:'round',earC:'#8a6a4a',muzzle:'#c9a878',nose:true},
+  penguin:{c:'#39434c',ear:'none',muzzle:'#fff',eyeC:'#fff',beak:'#f5a623',eyeSpread:56},
+  corgi:{c:'#e8a352',ear:'pointed',muzzle:'#fff',nose:true},
+  alpaca:{c:'#efe6d4',ear:'round',earC:'#efe6d4',muzzle:'#e6dac6'},
+  fox:{c:'#e8843c',ear:'pointed',earTip:'#33291f',muzzle:'#fff',nose:true},
+  // sweets (food)
+  'strawberry-cake':{type:'cake'}, 'chocolate-tart':{type:'tart'}, 'souffle-pancake':{type:'pancake'},
+  taiyaki:{type:'fish'}, crepe:{type:'crepe'}, takoyaki:{type:'takoyaki'}, dango:{type:'dango'},
+  pudding:{type:'pudding'}, 'melon-soda':{type:'drink',c:'#5fd07a'}, 'matcha-parfait':{type:'parfait',c:'#9ccb5a'},
+  kakigori:{type:'ice',syrup:'#8fd0ff'}, 'mizu-shingen':{type:'waterdrop'}, daifuku:{type:'mochi',c:'#fff'},
+  'sakura-mochi':{type:'sakura'}, 'muscat-parfait':{type:'parfait',c:'#bfe08a'}, croissant:{type:'croissant'},
+};
+
+/* 角色出處（顯示在名字下方，幫助辨識手繪版角色） */
+const SRC={
+  kirby:'星之卡比', cinnamoroll:'三麗鷗', kuromi:'三麗鷗',
+  pikachu:'寶可夢', doraemon:'哆啦A夢', totoro:'龍貓', jiji:'魔女宅急便',
+  duffy:'迪士尼', minion:'神偷奶爸', labubu:'POP MART',
+  moomin:'嚕嚕米', pompompurin:'三麗鷗', sumikko:'角落生物'
+};
+
+/* draw the contestant in pure CSS; emoji fallback only if no art defined */
+function media(c){
+  const a=ART[c.k];
+  if(!a) return `<span class="emoji-fallback">${c.e}</span>`;
+  const inner = a.type ? chibiFood(a) : chibiCreature(a);
+  return `<span class="chibi"><span class="cbi">${inner}</span></span>`;
+}
+
+/* build picker */
+function buildPicker(){
+  const box=$("themes"); box.innerHTML="";
+  Object.entries(BRACKETS).forEach(([key,b])=>{
+    const el=document.createElement("button");
+    el.className="opt";
+    el.innerHTML=`<span class="emoji">${b.icon}</span>
+      <span class="ja" lang="ja">${b.ja}</span>
+      <span class="en" lang="en">${b.en}</span>
+      <span class="zh" lang="zh">${b.zh}</span>`;
+    el.addEventListener("click",()=>start(key));
+    box.appendChild(el);
+  });
+}
+
+function start(key){
+  bracket=BRACKETS[key];
+  round=shuffle(bracket.list); nextRound=[]; mi=0;
+  $("picker").classList.add("hidden");
+  $("champ").classList.add("hidden");
+  $("arena").classList.remove("hidden");
+  renderMatch();
+}
+
+function renderMatch(){
+  const a=round[mi*2], b=round[mi*2+1];
+  const rn=roundName(round.length);
+  const totalMatches=round.length/2;
+  $("readout").innerHTML=`<span lang="ja">${rn.ja} <b>${rn.zh}</b></span><span lang="zh">第 <b>${mi+1}</b> / ${totalMatches} 場</span>`;
+  $("matchLabel").innerHTML=`<span class="p1" lang="ja">勝ったほうが次へ</span> · <span lang="zh">贏的晉級,輸的淘汰</span>`;
+  $("aE").innerHTML=media(a); $("aJa").textContent=a.ja; $("aEn").textContent=a.en; $("aZh").textContent=a.zh;
+  $("bE").innerHTML=media(b); $("bJa").textContent=b.ja; $("bEn").textContent=b.en; $("bZh").textContent=b.zh;
+  $("aSrc").textContent = SRC[a.k] ? "（"+SRC[a.k]+"）" : "";
+  $("bSrc").textContent = SRC[b.k] ? "（"+SRC[b.k]+"）" : "";
+  ["cA","cB"].forEach(id=>$(id).classList.remove("is-win","is-out"));
+  $("tagA").textContent=""; $("tagB").textContent="";
+  $("cA").disabled=false; $("cB").disabled=false;
+}
+
+function pick(side){
+  $("cA").disabled=true; $("cB").disabled=true;
+  const winIdx = side==="a" ? mi*2 : mi*2+1;
+  const winner = round[winIdx];
+  const winEl = side==="a" ? $("cA") : $("cB");
+  const outEl = side==="a" ? $("cB") : $("cA");
+  winEl.classList.add("is-win"); outEl.classList.add("is-out");
+  (side==="a"?$("tagA"):$("tagB")).textContent="勝ち · 晉級";
+  (side==="a"?$("tagB"):$("tagA")).textContent="淘汰 · out";
+  nextRound.push(winner);
+
+  const reduce=window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+  setTimeout(advance, reduce?150:650);
+}
+
+function advance(){
+  mi++;
+  if(mi*2 < round.length){ renderMatch(); return; }   // more matches this round
+  round=nextRound; nextRound=[]; mi=0;                  // next round
+  if(round.length===1){ crown(round[0]); return; }
+  renderMatch();
+}
+
+function crown(w){
+  $("arena").classList.add("hidden");
+  $("readout").innerHTML="";
+  $("chE").innerHTML=media(w);
+  $("chJa").textContent=w.ja;
+  $("chZh").textContent=w.zh;
+  $("chSrc").textContent = SRC[w.k] ? "（"+SRC[w.k]+"）" : "";
+  $("chLineJa").textContent=bracket.line.ja;
+  $("chLineZh").textContent=bracket.line.zh;
+  $("champ").classList.remove("hidden");
+}
+
+$("cA").addEventListener("click",()=>pick("a"));
+$("cB").addEventListener("click",()=>pick("b"));
+$("againBtn").addEventListener("click",()=>{
+  $("champ").classList.add("hidden");
+  $("picker").classList.remove("hidden");
+  $("readout").innerHTML="";
+});
+
+buildPicker();
+</script>
+</body>
+</html>

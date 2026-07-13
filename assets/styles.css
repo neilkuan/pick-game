@@ -1,0 +1,425 @@
+/* =========================================================================
+   どっち — 兩人一起選 / ふたりであそぶ / play together
+   Risograph two-ink theme. Pink ink + blue ink; where they overlap, purple.
+   The overlap is the whole idea: two languages, two people, one shared color.
+   ========================================================================= */
+
+/* ---- fonts -------------------------------------------------------------- */
+@import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&family=Noto+Sans+TC:wght@400;500;700;900&family=DM+Mono:wght@400;500&display=swap');
+
+/* ---- tokens ------------------------------------------------------------- */
+:root{
+  --paper:#FBF6EF;         /* warm, faintly peach paper — not grey cream    */
+  --paper-deep:#F3E9DA;    /* pressed-paper panels                          */
+  --pink:#FF4D97;          /* riso fluorescent pink ink                     */
+  --blue:#2E4BE0;          /* riso blue ink, a touch violet                 */
+  --overlap:#8A2BAE;       /* pink×blue multiply ≈ purple (the "us" color)  */
+  --ink:#2B2233;           /* warm near-black, violet-leaning               */
+  --ink-soft:#7A6E82;      /* secondary text                                */
+  --hair:rgba(43,34,51,.16);
+
+  --disp: "Zen Maru Gothic", "Noto Sans TC", system-ui, sans-serif;
+  --body: "Noto Sans TC", "Zen Maru Gothic", system-ui, sans-serif;
+  --mono: "DM Mono", ui-monospace, monospace;
+
+  --edge:22px;             /* card radius — soft, stationery-like           */
+  --wrap:1080px;
+}
+
+/* per-language type: each script gets the face that fits it best ---------- */
+:lang(ja){ font-family:"Zen Maru Gothic","Noto Sans TC",system-ui,sans-serif; }
+:lang(zh){ font-family:"Noto Sans TC","Zen Maru Gothic",system-ui,sans-serif; }
+:lang(en){ font-family:"Zen Maru Gothic",system-ui,sans-serif; }
+
+/* ---- reset -------------------------------------------------------------- */
+*{ box-sizing:border-box; margin:0; padding:0; }
+html{ -webkit-text-size-adjust:100%; }
+body{
+  font-family:var(--body);
+  color:var(--ink);
+  background:var(--paper);
+  line-height:1.6;
+  min-height:100vh;
+  overflow-x:hidden;
+  position:relative;
+}
+/* paper grain — subtle, handmade print feel */
+body::after{
+  content:"";
+  position:fixed; inset:0;
+  pointer-events:none; z-index:9999;
+  opacity:.05; mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+a{ color:inherit; text-decoration:none; }
+button{ font-family:inherit; cursor:pointer; border:none; background:none; }
+img{ max-width:100%; display:block; }
+
+/* ---- shared layout ------------------------------------------------------ */
+.wrap{ width:100%; max-width:var(--wrap); margin:0 auto; padding:0 24px; }
+
+/* focus visibility — quality floor */
+:focus-visible{ outline:3px solid var(--blue); outline-offset:3px; border-radius:6px; }
+
+/* ---- top bar ------------------------------------------------------------ */
+.topbar{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:22px 0;
+}
+.back{
+  display:inline-flex; align-items:center; gap:.5em;
+  font-family:var(--mono); font-size:.8rem; letter-spacing:.02em;
+  color:var(--ink-soft);
+  padding:.5em .9em; border-radius:999px;
+  border:1.5px solid var(--hair);
+  transition:border-color .2s, color .2s, transform .2s;
+}
+.back:hover{ color:var(--blue); border-color:var(--blue); transform:translateX(-2px); }
+.mark{
+  font-family:var(--disp); font-weight:900; font-size:1.05rem;
+  letter-spacing:.02em;
+}
+.mark .a{ color:var(--pink); }
+.mark .b{ color:var(--blue); }
+
+/* =========================================================================
+   SIGNATURE — the two-ink overlap wordmark
+   Two copies of the same text, one pink one blue, offset a few px, multiplied.
+   ========================================================================= */
+.riso-word{
+  position:relative; display:inline-block;
+  font-family:var(--disp); font-weight:900; line-height:.92;
+  letter-spacing:-0.045em;   /* large display reads too loose — tighten (apple-design §15) */
+  isolation:isolate;
+}
+.riso-word span{ display:block; }
+.riso-word .layer{ position:absolute; inset:0; mix-blend-mode:multiply; }
+.riso-word .ink-pink{ color:var(--pink); transform:translate(-.035em,-.02em); }
+.riso-word .ink-blue{ color:var(--blue);  transform:translate(.035em,.025em); }
+.riso-word .base{ color:transparent; } /* holds layout; ink layers show */
+
+/* =========================================================================
+   INDEX / hero
+   ========================================================================= */
+.hero{ padding:34px 0 26px; text-align:center; }
+.hero__mark{ font-size:clamp(4.4rem,17vw,9.5rem); }
+.hero__sub{
+  margin:1.6rem auto 0; max-width:36ch;
+  display:flex; flex-direction:column; gap:.15rem;
+}
+.hero__sub .ja{ font-family:var(--disp); font-weight:700; font-size:clamp(1.05rem,3.4vw,1.5rem); color:var(--ink); }
+.hero__sub .en{ font-family:var(--mono); font-size:.82rem; letter-spacing:.06em; color:var(--pink); text-transform:lowercase; }
+.hero__sub .zh{ font-size:clamp(.92rem,3vw,1.05rem); color:var(--ink-soft); }
+
+/* how-to strip */
+.howto{
+  margin:30px auto 0; max-width:640px;
+  display:flex; align-items:center; justify-content:center; gap:.7em; flex-wrap:wrap;
+  font-family:var(--mono); font-size:.78rem; color:var(--ink-soft);
+  padding:.7em 1.2em; border:1.5px dashed var(--hair); border-radius:999px;
+}
+.howto b{ color:var(--overlap); font-weight:500; }
+
+/* ---- game cards --------------------------------------------------------- */
+.deck{
+  display:grid; gap:26px; padding:48px 0 30px;
+  grid-template-columns:repeat(3,1fr);
+}
+.card{
+  position:relative; display:flex; flex-direction:column;
+  background:var(--paper-deep);
+  border:2px solid var(--ink);
+  border-radius:var(--edge);
+  padding:26px 24px 24px;
+  min-height:290px;
+  box-shadow:6px 7px 0 var(--ink);
+  transition:transform .22s cubic-bezier(.2,.8,.3,1.2), box-shadow .22s;
+  overflow:hidden;
+}
+.card:nth-child(1){ transform:rotate(-1.4deg); }
+.card:nth-child(2){ transform:rotate(.6deg); }
+.card:nth-child(3){ transform:rotate(-.4deg) translateY(8px); }
+.card:hover, .card:focus-within{
+  transform:rotate(0deg) translateY(-6px);
+  box-shadow:9px 12px 0 var(--overlap);
+}
+/* overlap dots in the corner — the ink signature, small */
+.card::before, .card::after{
+  content:""; position:absolute; width:64px; height:64px; border-radius:50%;
+  top:-18px; mix-blend-mode:multiply; opacity:.9;
+}
+.card::before{ right:6px;  background:var(--pink); }
+.card::after{  right:34px; background:var(--blue); }
+
+.card__players{
+  font-family:var(--mono); font-size:.72rem; letter-spacing:.04em;
+  color:var(--ink-soft); align-self:flex-start;
+  border:1.5px solid var(--hair); border-radius:999px; padding:.3em .8em;
+}
+.card__title{ margin-top:auto; font-family:var(--disp); font-weight:900; }
+.card__title .ja{ display:block; font-size:2rem; line-height:1.05; }
+.card__title .en{ display:block; font-family:var(--mono); font-size:.8rem; color:var(--pink); margin-top:.5em; letter-spacing:.04em; }
+.card__title .zh{ display:block; font-size:1rem; color:var(--ink-soft); font-weight:500; margin-top:.2em; }
+.card__desc{ margin-top:.9rem; font-size:.9rem; color:var(--ink); }
+.card__go{
+  margin-top:1.1rem; align-self:flex-start;
+  font-family:var(--disp); font-weight:700; font-size:.95rem;
+  color:var(--blue);
+  border-bottom:2.5px solid var(--pink); padding-bottom:.1em;
+  transition:color .2s, border-color .2s;
+}
+.card:hover .card__go{ color:var(--overlap); border-color:var(--overlap); }
+
+.foot{
+  padding:40px 0 60px; text-align:center;
+  font-family:var(--mono); font-size:.74rem; color:var(--ink-soft);
+}
+.foot b{ color:var(--pink); font-weight:500; }
+
+/* =========================================================================
+   GAME SHELL (shared by the three game pages)
+   ========================================================================= */
+.stage{ min-height:calc(100vh - 88px); display:flex; flex-direction:column; }
+.stage__head{ text-align:center; padding:8px 0 26px; }
+.stage__title{ font-family:var(--disp); font-weight:900; font-size:clamp(1.8rem,6vw,2.8rem); letter-spacing:-0.025em; }
+.stage__title .en{ display:block; font-family:var(--mono); font-size:.8rem; color:var(--ink-soft); letter-spacing:.06em; margin-top:.4em; font-weight:400; }
+
+/* progress / score readout */
+.readout{
+  display:flex; align-items:center; justify-content:center; gap:1.4rem;
+  font-family:var(--mono); font-size:.9rem; color:var(--ink-soft);
+}
+.readout b{ color:var(--overlap); font-weight:500; font-size:1.1rem; }
+
+/* prompt block (trilingual question) — each language on its own line */
+.prompt{ text-align:center; margin:8px auto 30px; max-width:32ch; }
+.prompt .ja{ display:block; font-family:var(--disp); font-weight:700; font-size:clamp(1.3rem,5vw,1.9rem); line-height:1.3; }
+.prompt .en{ display:block; font-family:var(--mono); font-size:.82rem; color:var(--pink); margin-top:.5em; letter-spacing:.03em; }
+.prompt .zh{ display:block; color:var(--ink-soft); margin-top:.3em; }
+
+/* the two big choice buttons (This or That) */
+.versus{
+  display:grid; grid-template-columns:1fr auto 1fr; gap:14px; align-items:center;
+  max-width:760px; margin:0 auto; width:100%;
+}
+.choice{
+  position:relative;
+  background:var(--paper-deep);
+  border:2px solid var(--ink);
+  border-radius:var(--edge);
+  padding:30px 22px; min-height:210px;
+  display:flex; flex-direction:column; justify-content:center; gap:.4em;
+  text-align:center; color:var(--ink);
+  box-shadow:5px 6px 0 var(--ink);
+  transition:transform .18s, box-shadow .18s, background .18s;
+}
+.choice:hover{ transform:translateY(-4px); }
+.choice .emoji{ font-size:2.6rem; line-height:1; }
+.choice .ja{ font-family:var(--disp); font-weight:700; font-size:1.35rem; }
+.choice .en{ font-family:var(--mono); font-size:.76rem; color:var(--ink-soft); }
+.choice .zh{ font-size:.95rem; color:var(--ink-soft); }
+.choice.pick-a{ box-shadow:5px 6px 0 var(--pink); }
+.choice.pick-a:hover{ background:#FFE7F0; box-shadow:6px 8px 0 var(--pink); }
+.choice.pick-b{ box-shadow:5px 6px 0 var(--blue); }
+.choice.pick-b:hover{ background:#E7ECFF; box-shadow:6px 8px 0 var(--blue); }
+/* chosen state */
+.choice[aria-pressed="true"].pick-a{ background:var(--pink); color:#fff; border-color:var(--pink); }
+.choice[aria-pressed="true"].pick-b{ background:var(--blue); color:#fff; border-color:var(--blue); }
+.choice[aria-pressed="true"] .en, .choice[aria-pressed="true"] .zh{ color:rgba(255,255,255,.85); }
+
+.versus__or{
+  font-family:var(--disp); font-weight:900; font-size:1.2rem;
+  color:var(--overlap); text-align:center;
+}
+.versus__or .ja{ display:block; font-size:1.4rem; }
+.versus__or .en{ display:block; font-family:var(--mono); font-size:.7rem; color:var(--ink-soft); }
+
+/* who-picks label above the versus */
+.turn{
+  text-align:center; margin:0 auto 16px;
+  font-family:var(--mono); font-size:.85rem; letter-spacing:.04em;
+}
+.turn .p1{ color:var(--pink); }
+.turn .p2{ color:var(--blue); }
+
+/* primary action button */
+.btn{
+  display:inline-flex; align-items:center; gap:.6em;
+  font-family:var(--disp); font-weight:700; font-size:1.05rem;
+  color:var(--paper);
+  background:var(--ink);
+  border-radius:999px; padding:.75em 1.8em;
+  box-shadow:4px 5px 0 var(--overlap);
+  transition:transform .16s, box-shadow .16s, background .16s;
+}
+.btn:hover{ transform:translateY(-2px); background:var(--overlap); box-shadow:5px 7px 0 var(--ink); }
+.btn:active{ transform:translateY(1px); box-shadow:2px 3px 0 var(--overlap); }
+.btn--ghost{ color:var(--ink); background:transparent; border:2px solid var(--ink); box-shadow:none; }
+.btn--ghost:hover{ background:var(--paper-deep); color:var(--ink); box-shadow:none; }
+.actions{ display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-top:30px; }
+
+/* Instant press feedback — respond on pointer-down, not release (apple-design §1) */
+.card, .choice, .opt, .btn, .back{ touch-action:manipulation; }
+.choice:active{ transform:scale(.97); }
+.opt:active{ transform:scale(.96); }
+.btn:active{ transform:translateY(1px) scale(.97); box-shadow:2px 3px 0 var(--overlap); }
+
+/* =========================================================================
+   THE MATCH MOMENT — two ink blobs slide together into purple
+   ========================================================================= */
+.blobs{
+  position:relative; height:150px; margin:6px auto 0; width:280px;
+  isolation:isolate;
+}
+.blob{
+  position:absolute; top:50%; width:118px; height:118px; border-radius:50%;
+  transform:translateY(-50%); mix-blend-mode:multiply;
+  transition:opacity .5s;   /* `left` is driven by a real spring in JS — apple-design §4 */
+}
+/* blobs 280w, blob 118w → left edges: pink 2px, blue 160px, center 81px */
+.blob--pink{ background:var(--pink); left:2px; }
+.blob--blue{ background:var(--blue); left:160px; }
+.blobs.is-miss .blob{ opacity:.55; }
+.blobs__label{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-family:var(--disp); font-weight:900; font-size:1.5rem; color:#fff;
+  opacity:0; transition:opacity .3s .35s; z-index:2; text-shadow:0 1px 2px rgba(0,0,0,.25);
+}
+.blobs.is-match .blobs__label{ opacity:1; }
+
+/* reveal grid for synchro choices */
+.grid4{
+  display:grid; grid-template-columns:repeat(2,1fr); gap:14px;
+  max-width:520px; margin:0 auto; width:100%;
+}
+.opt{
+  background:var(--paper-deep); border:2px solid var(--ink); border-radius:18px;
+  padding:20px 14px; display:flex; flex-direction:column; align-items:center; gap:.3em;
+  box-shadow:4px 5px 0 var(--ink); transition:transform .16s, box-shadow .16s, background .16s;
+  color:var(--ink); text-align:center;
+}
+.opt:hover{ transform:translateY(-3px); box-shadow:5px 7px 0 var(--overlap); }
+.opt .emoji{ font-size:2.2rem; }
+.opt .ja{ font-family:var(--disp); font-weight:700; font-size:1.05rem; }
+.opt .en{ font-family:var(--mono); font-size:.72rem; color:var(--ink-soft); }
+.opt .zh{ font-size:.85rem; color:var(--ink-soft); }
+.opt[aria-pressed="true"]{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
+.opt[aria-pressed="true"] .en,.opt[aria-pressed="true"] .zh{ color:rgba(255,255,255,.8); }
+
+/* secrecy curtain between player 1 and player 2 */
+.curtain{
+  text-align:center; background:var(--paper-deep); border:2px dashed var(--ink);
+  border-radius:var(--edge); padding:40px 24px; max-width:480px; margin:0 auto;
+}
+.curtain .big{ font-family:var(--disp); font-weight:900; font-size:1.6rem; }
+.curtain .p1{ color:var(--pink); }
+.curtain .p2{ color:var(--blue); }
+.curtain .sub{ color:var(--ink-soft); margin:.6em 0 1.4rem; font-size:.9rem; }
+
+/* result panel */
+.result{
+  text-align:center; background:var(--paper-deep); border:2px solid var(--ink);
+  border-radius:var(--edge); padding:34px 26px; max-width:520px; margin:0 auto;
+  box-shadow:6px 8px 0 var(--overlap);
+}
+.result__score{ font-family:var(--mono); font-size:3.4rem; font-weight:500; color:var(--overlap); line-height:1; }
+.result__msg{ margin-top:.8rem; }
+.result__msg .ja{ display:block; font-family:var(--disp); font-weight:700; font-size:1.3rem; }
+.result__msg .en{ display:block; font-family:var(--mono); font-size:.78rem; color:var(--pink); margin-top:.4em; }
+.result__msg .zh{ display:block; color:var(--ink-soft); margin-top:.2em; }
+
+/* helper */
+.center{ text-align:center; }
+.hidden{ display:none !important; }
+.spacer{ flex:1 1 auto; }
+
+/* =========================================================================
+   TOURNAMENT — theme picker, champion, advance/eliminate feedback
+   ========================================================================= */
+.themes{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:16px;
+  max-width:760px; margin:0 auto; width:100%;
+}
+/* winner advancing / loser eliminated (single-elim, one screen) */
+.choice.is-win{ background:var(--overlap); color:#fff; border-color:var(--overlap); box-shadow:6px 8px 0 var(--ink); transform:translateY(-6px) scale(1.04); transition:transform .42s cubic-bezier(.2,.9,.2,1.35), background .18s, box-shadow .18s; }
+.choice.is-win .en, .choice.is-win .zh{ color:rgba(255,255,255,.85); }
+.choice.is-out{ opacity:.35; filter:grayscale(.6); transform:scale(.94); }
+.choice__tag{
+  position:absolute; top:12px; left:50%; transform:translateX(-50%);
+  font-family:var(--mono); font-size:.72rem; letter-spacing:.06em;
+  padding:.2em .7em; border-radius:999px; opacity:0; transition:opacity .2s;
+}
+.choice.is-win .choice__tag{ opacity:1; background:#fff; color:var(--overlap); }
+.choice.is-out .choice__tag{ opacity:1; background:var(--ink); color:var(--paper); }
+
+.champ{ text-align:center; }
+/* contestant images — square, framed; falls back to emoji text if missing */
+.emoji .pic{
+  width:104px; height:104px; object-fit:cover; display:block;
+  border-radius:16px; background:var(--paper);
+}
+.champ__emoji .pic{
+  width:132px; height:132px; object-fit:cover; display:inline-block;
+  border-radius:20px; background:var(--paper);
+}
+.champ__crown{ font-family:var(--mono); font-size:.78rem; letter-spacing:.14em; color:var(--pink); text-transform:uppercase; }
+.champ__emoji{ font-size:clamp(3.6rem,14vw,5rem); line-height:1; margin:.12em 0; }
+.champ__name{ font-family:var(--disp); font-weight:900; font-size:clamp(1.6rem,7vw,2.3rem); line-height:1.15; }
+.champ__name .zh{ display:block; font-size:.6em; font-weight:700; color:var(--ink-soft); margin-top:.25em; }
+.champ__line{ margin-top:1rem; }
+.champ__line .ja{ display:block; font-family:var(--disp); font-weight:700; }
+.champ__line .zh{ display:block; color:var(--ink-soft); font-size:.9rem; margin-top:.2em; }
+/* gentle closing question — set apart from the celebration by a hairline */
+.champ__ask{
+  margin-top:1.4rem; padding-top:1.2rem; border-top:1.5px dashed var(--hair);
+}
+.champ__ask .ja{ display:block; font-family:var(--disp); font-weight:700; font-size:1.05rem; color:var(--overlap); }
+.champ__ask .en{ display:block; font-family:var(--mono); font-size:.72rem; color:var(--pink); margin-top:.4em; letter-spacing:.02em; }
+.champ__ask .zh{ display:block; color:var(--ink-soft); font-size:.9rem; margin-top:.25em; }
+
+/* =========================================================================
+   Entrances — one orchestrated arrival per screen (apple-design §17).
+   Each screen gets a single moment, not scattered effects.
+   ========================================================================= */
+@keyframes word-in{ from{ opacity:0; transform:scale(.86); } to{ opacity:1; transform:none; } }
+@keyframes rise-in{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:translateY(0); } }
+@keyframes soft-in{ from{ opacity:0; } to{ opacity:1; } }
+@keyframes pop-in{  from{ opacity:0; transform:scale(.92); } to{ opacity:1; transform:none; } }
+@keyframes land-bump{ 0%{ transform:scale(1); } 42%{ transform:scale(1.07); } 100%{ transform:scale(1); } }
+
+/* index: the wordmark lands, then the sub-line and cards follow */
+.hero__mark{ animation:word-in .7s cubic-bezier(.2,.9,.2,1.2) both; }
+.hero__sub{  animation:rise-in .6s ease both; animation-delay:.28s; }
+.howto{      animation:rise-in .6s ease both; animation-delay:.42s; }
+.deck .card{ animation:soft-in .6s ease both; }   /* opacity only — preserves each card's tilt */
+.deck .card:nth-child(1){ animation-delay:.36s; }
+.deck .card:nth-child(2){ animation-delay:.46s; }
+.deck .card:nth-child(3){ animation-delay:.56s; }
+
+/* every reveal panel materialises with a small spring pop
+   (synchro result, tournament champion, decide verdict) */
+.result{ animation:pop-in .5s cubic-bezier(.2,.9,.2,1.3) both; }
+
+/* decide: the chosen side lands with a physical bump */
+.choice.landed{ animation:land-bump .5s cubic-bezier(.2,.9,.2,1.3); }
+
+/* =========================================================================
+   Responsive
+   ========================================================================= */
+@media (max-width:760px){
+  .themes{ grid-template-columns:1fr; }
+  .deck{ grid-template-columns:1fr; }
+  .card:nth-child(1),.card:nth-child(2),.card:nth-child(3){ transform:rotate(0); }
+  .card{ min-height:0; }
+  .versus{ grid-template-columns:1fr; }
+  .versus__or{ padding:2px 0; }
+  .choice{ min-height:150px; padding:22px 18px; }
+}
+
+/* =========================================================================
+   Reduced motion — respect it
+   ========================================================================= */
+@media (prefers-reduced-motion:reduce){
+  *{ animation:none !important; transition:none !important; }
+  .blob{ transition:none; }
+}
