@@ -30,8 +30,14 @@
     border-radius:0 0 60% 60%; filter:url(#wobble); }
   .cbi .xline{ position:absolute; width:5px; height:19px; background:#33291f; border-radius:3px; filter:url(#wobble); }
   .cbi .line{ position:absolute; background:#33291f; border-radius:4px; filter:url(#wobble); }
-  .choice .src{ display:block; font-size:.72rem; color:var(--ink-soft); margin-top:.15em; }
-  .champ__name .src{ display:block; font-family:var(--mono); font-size:.8rem; color:var(--ink-soft); margin-top:.35em; font-weight:400; }
+  .choice .src{ display:block; margin-top:.35em; line-height:1.35; }
+  .choice .src .ja{ display:block; font-family:var(--disp); font-weight:700; font-size:.72rem; color:var(--ink-soft); }
+  .choice .src .en{ display:block; font-family:var(--mono); font-size:.6rem; color:var(--ink-soft); }
+  .choice .src .zh{ display:block; font-size:.68rem; color:var(--ink-soft); }
+  .champ__name .src{ display:block; margin-top:.5em; line-height:1.4; }
+  .champ__name .src .ja{ display:block; font-family:var(--disp); font-weight:700; font-size:.85rem; color:var(--ink-soft); }
+  .champ__name .src .en{ display:block; font-family:var(--mono); font-size:.68rem; color:var(--ink-soft); }
+  .champ__name .src .zh{ display:block; font-size:.8rem; color:var(--ink-soft); }
 </style>
 </head>
 <body>
@@ -379,13 +385,26 @@ const ART={
   'sakura-mochi':{type:'sakura'}, 'muscat-parfait':{type:'parfait',c:'#bfe08a'}, croissant:{type:'croissant'},
 };
 
-/* 角色出處（顯示在名字下方，幫助辨識手繪版角色） */
+/* 角色出處（三語，顯示在名字下方，幫助辨識手繪版角色） */
 const SRC={
-  kirby:'星之卡比', cinnamoroll:'三麗鷗', kuromi:'三麗鷗',
-  pikachu:'寶可夢', doraemon:'哆啦A夢', totoro:'龍貓', jiji:'魔女宅急便',
-  duffy:'迪士尼', minion:'神偷奶爸', labubu:'POP MART',
-  moomin:'嚕嚕米', pompompurin:'三麗鷗', sumikko:'角落生物'
+  kirby:{ja:'星のカービィ',en:'Kirby',zh:'星之卡比'},
+  cinnamoroll:{ja:'サンリオ',en:'Sanrio',zh:'三麗鷗'},
+  kuromi:{ja:'サンリオ',en:'Sanrio',zh:'三麗鷗'},
+  pikachu:{ja:'ポケモン',en:'Pokémon',zh:'寶可夢'},
+  doraemon:{ja:'ドラえもん',en:'Doraemon',zh:'哆啦A夢'},
+  totoro:{ja:'となりのトトロ',en:"My Neighbor Totoro",zh:'龍貓'},
+  jiji:{ja:'魔女の宅急便',en:"Kiki's Delivery Service",zh:'魔女宅急便'},
+  duffy:{ja:'ディズニー',en:'Disney',zh:'迪士尼'},
+  minion:{ja:'怪盗グルー',en:'Despicable Me',zh:'神偷奶爸'},
+  labubu:{ja:'POP MART',en:'POP MART',zh:'POP MART'},
+  moomin:{ja:'ムーミン',en:'Moomin',zh:'嚕嚕米'},
+  pompompurin:{ja:'サンリオ',en:'Sanrio',zh:'三麗鷗'},
+  sumikko:{ja:'すみっコぐらし',en:'Sumikko Gurashi',zh:'角落生物'}
 };
+function srcHTML(k){
+  const s=SRC[k]; if(!s) return '';
+  return `<span class="ja" lang="ja">（${s.ja}）</span><span class="en" lang="en">(${s.en})</span><span class="zh" lang="zh">（${s.zh}）</span>`;
+}
 
 /* draw the contestant in pure CSS; emoji fallback only if no art defined */
 function media(c){
@@ -427,8 +446,8 @@ function renderMatch(){
   $("matchLabel").innerHTML=`<span class="p1" lang="ja">勝ったほうが次へ</span> · <span lang="zh">贏的晉級,輸的淘汰</span>`;
   $("aE").innerHTML=media(a); $("aJa").textContent=a.ja; $("aEn").textContent=a.en; $("aZh").textContent=a.zh;
   $("bE").innerHTML=media(b); $("bJa").textContent=b.ja; $("bEn").textContent=b.en; $("bZh").textContent=b.zh;
-  $("aSrc").textContent = SRC[a.k] ? "（"+SRC[a.k]+"）" : "";
-  $("bSrc").textContent = SRC[b.k] ? "（"+SRC[b.k]+"）" : "";
+  $("aSrc").innerHTML = srcHTML(a.k);
+  $("bSrc").innerHTML = srcHTML(b.k);
   ["cA","cB"].forEach(id=>$(id).classList.remove("is-win","is-out"));
   $("tagA").textContent=""; $("tagB").textContent="";
   $("cA").disabled=false; $("cB").disabled=false;
@@ -463,7 +482,7 @@ function crown(w){
   $("chE").innerHTML=media(w);
   $("chJa").textContent=w.ja;
   $("chZh").textContent=w.zh;
-  $("chSrc").textContent = SRC[w.k] ? "（"+SRC[w.k]+"）" : "";
+  $("chSrc").innerHTML = srcHTML(w.k);
   $("chLineJa").textContent=bracket.line.ja;
   $("chLineZh").textContent=bracket.line.zh;
   $("champ").classList.remove("hidden");
